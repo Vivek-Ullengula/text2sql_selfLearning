@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+*.log
+
+# Sensitive
+.env
+
+# Virtual Env
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+
+# DB
+*.sqlite
+*.db
+
+# Agno / Agent
+.agno/
+storage/
+knowledge/
+
+# Streamlit
+.streamlit/
+check_data_integrity.py
+diagnostic.txt
+diagnostic_results.txt
+pandasai.log
+
+# Charts (Generated)
+exports/
+my_charts/
+
+# Data (Large Files)
+data/
