@@ -48,7 +48,7 @@ sql_agent_knowledge = Knowledge(
     name="SQL Agent Knowledge",
     vector_db=PgVector(
         db_url=pg_url,
-        table_name="custlight_sql_agent_knowledge",
+        table_name="custlight_sql_agent_knowledge_v2",
         search_type=SearchType.hybrid,
         embedder=OpenAIEmbedder(id="text-embedding-3-small"),
     ),
@@ -138,7 +138,7 @@ semantic_model = {
                 {"name": "PremiumAmt", "type": "DECIMAL", "description": "Premium amount"},
                 {"name": "ProviderRef", "type": "INT", "description": "FK to v_providers.provider_id"},
                 {"name": "PaidStatusCd", "type": "VARCHAR"},
-                {"name": "TransactionDt", "type": "DATE"},
+                {"name": "TransactionEffectiveDt", "type": "DATE"},
             ],
         },
     ],
@@ -277,7 +277,15 @@ def visualize_last_query_results(sql_query: str, visualization_request: str = "G
         sdf = pai.DataFrame(df)
 
         # Ask PandasAI to generate the visualization
-        chart_prompt = f"Plot a chart: {visualization_request}. Save the chart as a PNG file."
+        # We explicitly ask for matplotlib adjustments to prevent clipping
+        # NEW: Portrait aspect ratio (6x7) fits better in chat bubbles
+        chart_prompt = (
+            f"Plot a chart: {visualization_request}. "
+            "Use matplotlib. "
+            "IMPORTANT: Use Portrait orientation (approx 6x7 inches). "
+            "Call plt.tight_layout(pad=3.0) to ensure titls and labels are not cut off. "
+            "Save the chart as a PNG file."
+        )
         result = sdf.chat(chart_prompt)
 
         logger.info(f"PandasAI visualization result: {result}")
@@ -317,21 +325,26 @@ def visualize_last_query_results(sql_query: str, visualization_request: str = "G
                 # Failing silently or logging if not in streamlit
                 logger.warning(f"Skipping Streamlit image render: {e}")
 
-            # --- AgentOS Logic: Resize & Static Serve ---
+
+
+            # --- AgentOS Logic: Add Padding to Prevent UI Cropping ---
             try:
                 with Image.open(generated_chart_path) as img:
-                    # If wider than 800, resize to 800 width (maintain aspect ratio)
-                    if img.width > 800:
-                        ratio = 800 / img.width
-                        new_height = int(img.height * ratio)
-                        img = img.resize((800, new_height), Image.Resampling.LANCZOS)
-                        img.save(generated_chart_path) # Overwrite
+                    # Create a larger canvas (add 200px border)
+                    padding = 200
+                    new_width = img.width + (2 * padding)
+                    new_height = img.height + (2 * padding)
+                    
+                    canvas = Image.new("RGB", (new_width, new_height), "white")
+                    # Paste original image in the center
+                    canvas.paste(img, (padding, padding))
+                    canvas.save(generated_chart_path)
             except Exception as e:
-                logger.warning(f"Failed to resize image: {e}")
+                logger.warning(f"Failed to add padding: {e}")
 
-            # Returns an absolute URL pointing to localhost so it works even if accessing via os.agno.com
+            # Returns an absolute URL pointing to localhost
             chart_filename = generated_chart_path.name
-            # Assuming default port 7777 for AgentOS
+            # Revert to Standard Markdown, as HTML might be stripped/ignored
             return f"Visualization generated. IMPORTANT: To show this to the user, you MUST copy the following markdown into your response:\n\n![Chart](http://localhost:7777/charts/{chart_filename})\n\n(Saved to: {generated_chart_path})"
         else:
             return f"PandasAI response: {result}. No chart file was generated."

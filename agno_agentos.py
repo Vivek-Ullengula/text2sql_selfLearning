@@ -10,7 +10,24 @@ sql_agent.instructions.append(
     "If a tool returns a visualization (Markdown image), you MUST include that exact Markdown image string in your final response so the user can see it."
 )
 
-agent_os = AgentOS(agents=[sql_agent])
+from agno.os.config import AgentOSConfig, ChatConfig
+
+agent_os = AgentOS(
+    agents=[sql_agent],
+    config=AgentOSConfig(
+        description="Text-to-SQL Agent with Visualization",
+        chat=ChatConfig(
+            title="CustLight AI",
+            quick_prompts={
+                "sql-agent": [
+                    "List top 5 Producers by Commission on Active Policies",
+                    "Give me the monthly trend of Total Commission Amount for the past year",
+                    "List high-performing Providers (> $500 comm) with policy counts",
+                ]
+            }
+        )
+    )
+)
 
 # Get the FastAPI app
 app = agent_os.get_app()
