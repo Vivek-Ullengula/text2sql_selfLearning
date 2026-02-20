@@ -4,3 +4,11 @@ pandas
 matplotlib
 pymysql
 Pillow
+agno
+psycopg2-binary
+pgvector
+sqlalchemy
+fastapi
+uvicorn
+python-dotenv
+streamlit
