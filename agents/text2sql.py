@@ -129,16 +129,57 @@ semantic_model = {
             ],
         },
         {
-            "table_name": "commissiondetail",
-            "table_description": "Commission payment records. Each row is one commission record. NOTE: This table may be empty.",
+            "table_name": "v_commissions",
+            "table_description": "Commission payment records view.",
             "columns": [
-                {"name": "SystemId", "type": "INT", "description": "Primary key"},
-                {"name": "CommissionAmt", "type": "DECIMAL", "description": "Commission dollar amount"},
-                {"name": "CommissionPct", "type": "DECIMAL", "description": "Commission percentage"},
-                {"name": "PremiumAmt", "type": "DECIMAL", "description": "Premium amount"},
-                {"name": "ProviderRef", "type": "INT", "description": "FK to v_providers.provider_id"},
-                {"name": "PaidStatusCd", "type": "VARCHAR"},
-                {"name": "TransactionEffectiveDt", "type": "DATE"},
+                {"name": "commission_id", "type": "INT", "description": "Unique commission ID"},
+                {"name": "commission_amount", "type": "DECIMAL", "description": "Commission dollar amount"},
+                {"name": "premium_amount", "type": "DECIMAL", "description": "Premium amount"},
+                {"name": "transaction_date", "type": "DATE", "description": "Transaction date"},
+                {"name": "provider_ref", "type": "INT", "description": "FK to v_providers.provider_id"},
+                {"name": "policy_ref", "type": "INT", "description": "FK to v_policies.policy_id (SourceRef)"},
+                {"name": "policy_number", "type": "VARCHAR", "description": "Policy number"},
+                {"name": "commission_type", "type": "VARCHAR", "description": "Commission type"},
+                {"name": "carrier_code", "type": "VARCHAR", "description": "Carrier code"},
+                {"name": "charged_amount", "type": "DECIMAL", "description": "Charged amount"},
+            ],
+        },
+        {
+            "table_name": "v_claims",
+            "table_description": "Claims details view.",
+            "columns": [
+                {"name": "claim_id", "type": "INT", "description": "Unique claim ID"},
+                {"name": "claim_number", "type": "VARCHAR", "description": "Claim number"},
+                {"name": "status", "type": "VARCHAR", "description": "Claim status"},
+                {"name": "total_incurred", "type": "DECIMAL", "description": "Total incurred amount"},
+                {"name": "loss_date", "type": "VARCHAR", "description": "Date of loss"},
+                {"name": "reported_date", "type": "VARCHAR", "description": "Date reported"},
+                {"name": "description", "type": "VARCHAR", "description": "Claim description"},
+                {"name": "adjuster", "type": "VARCHAR", "description": "Adjuster name"},
+                {"name": "policy_ref", "type": "VARCHAR", "description": "FK to v_policies.policy_id (CAST required)"},
+            ],
+        },
+        {
+            "table_name": "v_payments",
+            "table_description": "Payment details view.",
+            "columns": [
+                {"name": "payment_id", "type": "INT", "description": "Unique payment ID"},
+                {"name": "policy_ref", "type": "VARCHAR", "description": "FK to v_policies.policy_id (CAST required)"},
+                {"name": "amount", "type": "DECIMAL", "description": "Payment amount"},
+                {"name": "payment_date", "type": "VARCHAR", "description": "Payment date"},
+                {"name": "payment_type", "type": "VARCHAR", "description": "Payment type"},
+            ],
+        },
+        {
+            "table_name": "v_notes",
+            "table_description": "Notes view.",
+            "columns": [
+                {"name": "note_id", "type": "INT", "description": "Unique note ID"},
+                {"name": "policy_ref", "type": "VARCHAR", "description": "FK to v_policies.policy_id (CAST required)"},
+                {"name": "claim_ref", "type": "VARCHAR", "description": "FK to v_claims.claim_id (CAST required)"},
+                {"name": "author", "type": "VARCHAR", "description": "Author"},
+                {"name": "note_date", "type": "VARCHAR", "description": "Note date"},
+                {"name": "note_text", "type": "VARCHAR", "description": "Note content"},
             ],
         },
     ],
@@ -160,7 +201,23 @@ semantic_model = {
         },
         {
             "description": "Commission to Provider",
-            "join": "commissiondetail.ProviderRef = v_providers.provider_id",
+            "join": "v_commissions.provider_ref = v_providers.provider_id",
+        },
+        {
+            "description": "Claim to Policy",
+            "join": "v_claims.policy_ref = v_policies.policy_id (use CAST(v_claims.policy_ref AS UNSIGNED) = v_policies.policy_id)",
+        },
+        {
+            "description": "Payment to Policy",
+            "join": "v_payments.policy_ref = v_policies.policy_id (use CAST(v_payments.policy_ref AS UNSIGNED) = v_policies.policy_id)",
+        },
+        {
+            "description": "Note to Policy",
+            "join": "v_notes.policy_ref = v_policies.policy_id (use CAST(v_notes.policy_ref AS UNSIGNED) = v_policies.policy_id)",
+        },
+        {
+            "description": "Note to Claim",
+            "join": "v_notes.claim_ref = v_claims.claim_id (use CAST(v_notes.claim_ref AS UNSIGNED) = v_claims.claim_id)",
         },
     ],
 }
@@ -283,6 +340,7 @@ def visualize_last_query_results(sql_query: str, visualization_request: str = "G
             f"Plot a chart: {visualization_request}. "
             "Use matplotlib. "
             "IMPORTANT: Use Portrait orientation (approx 6x7 inches). "
+            "Rotate x-axis labels by 45 degrees to prevent overlap. "
             "Call plt.tight_layout(pad=3.0) to ensure titls and labels are not cut off. "
             "Save the chart as a PNG file."
         )
@@ -571,7 +629,10 @@ sql_agent = Agent(
                 "v_customers": "Customer details — columns: customer_id, customer_name, status, email, phone, city, state, zip_code, provider_ref",
                 "v_policies": "Policy details — columns: policy_id, policy_number, status, customer_ref, provider_ref, expiration_date",
                 "v_providers": "Provider/producer details — columns: provider_id, provider_name, provider_type, city, state, phone",
-                "commissiondetail": "Commission records — columns: SystemId, CommissionAmt, CommissionPct, PremiumAmt, ProviderRef",
+                "v_commissions": "Commission records — columns: commission_id, commission_amount, premium_amount, transaction_date, provider_ref",
+                "v_claims": "Claim details — columns: claim_id, claim_number, status, total_incurred, loss_date, reported_date, policy_ref",
+                "v_payments": "Payment details — columns: payment_id, policy_ref, amount, payment_date, payment_type",
+                "v_notes": "Notes — columns: note_id, policy_ref, claim_ref, author, note_date, note_text",
             },
         ),
         ReasoningTools(add_instructions=True),

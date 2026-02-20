@@ -1,4 +1,8 @@
+import sys
 from pathlib import Path
+
+# Add project root to sys.path so we can import from agents
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from agno.utils.log import logger
 
