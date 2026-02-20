@@ -6,7 +6,7 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from agno.utils.log import logger
 
-from agents.text2sql import sql_agent_knowledge
+from db.config import sql_agent_knowledge
 
 # ============================================================================
 # Path to SQL Agent Knowledge

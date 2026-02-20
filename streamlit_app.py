@@ -1,5 +1,5 @@
 import streamlit as st
-from agents.text2sql import sql_agent
+from text2sql_agent.agent import sql_agent
 import base64
 import os
 import re

@@ -2,13 +2,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from agno.os import AgentOS
-from agents.text2sql import sql_agent
+from text2sql_agent.agent import sql_agent
 
 # Initialize AgentOS with our SQL Agent
-# PATCH: Add instruction to render images in AgentOS UI
-sql_agent.instructions.append(
-    "If a tool returns a visualization (Markdown image), you MUST include that exact Markdown image string in your final response so the user can see it."
-)
+# The visualization instructions are now heavily baked into system_prompt.py
 
 from agno.os.config import AgentOSConfig, ChatConfig
 
