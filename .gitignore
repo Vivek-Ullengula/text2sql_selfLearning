@@ -16,6 +16,7 @@ env/
 # IDE
 .vscode/
 .idea/
+.gemini/
 
 # DB
 *.sqlite
@@ -24,18 +25,16 @@ env/
 # Agno / Agent
 .agno/
 storage/
-knowledge/
 
 # Streamlit
 .streamlit/
-check_data_integrity.py
-diagnostic.txt
-diagnostic_results.txt
-pandasai.log
 
 # Charts (Generated)
 exports/
 my_charts/
 
-# Data (Large Files)
+# Data (Large JSON files)
 data/
+
+# Docker volumes
+docker/data/

@@ -1,3 +1,6 @@
+import json
+from pathlib import Path
+
 from agno.agent import Agent
 from agno.models.openai import OpenAIResponses
 from agno.tools.reasoning import ReasoningTools
@@ -9,6 +12,7 @@ from agno.learn import (
     LearningMode,
 )
 
+from settings import MYSQL_URL, LLM_MODEL
 from db.config import mysql_url, get_demo_db, sql_agent_knowledge, sql_agent_learnings
 from text2sql_agent.context.system_prompt import SYSTEM_MESSAGE
 from text2sql_agent.tools import (
@@ -16,6 +20,30 @@ from text2sql_agent.tools import (
     create_save_validated_query_tool,
     visualize_last_query_results,
 )
+
+# ---------------------------------------------------------------------------
+# Auto-load table hints from knowledge/*.json
+# ---------------------------------------------------------------------------
+def _load_table_hints() -> dict:
+    """Build SQLTools table hints from knowledge JSON files.
+    Falls back to empty dict if knowledge dir doesn't exist."""
+    hints = {}
+    knowledge_dir = Path(__file__).resolve().parent.parent / "knowledge"
+    if not knowledge_dir.exists():
+        return hints
+    for fp in sorted(knowledge_dir.glob("*.json")):
+        try:
+            data = json.loads(fp.read_text(encoding="utf-8"))
+            name = data.get("table_name", fp.stem)
+            desc = data.get("table_description", "")
+            # Append rules as extra context
+            rules = data.get("rules", [])
+            if rules:
+                desc += " Rules: " + " | ".join(rules)
+            hints[name] = desc
+        except (json.JSONDecodeError, KeyError):
+            continue
+    return hints
 
 # ---------------------------------------------------------------------------
 # Tools Configuration
@@ -26,15 +54,7 @@ introspect_schema = create_introspect_schema_tool(mysql_url)
 sql_tools = [
     SQLTools(
         db_url=mysql_url,
-        tables={
-            "v_customers": "Customer details — columns: customer_id, customer_name, status, email, phone, city, state, zip_code, provider_ref",
-            "v_policies": "Policy details — columns: policy_id, policy_number, status, customer_ref, provider_ref, expiration_date",
-            "v_providers": "Provider/producer details — columns: provider_id, provider_name, provider_type, city, state, phone",
-            "v_commissions": "Commission records — columns: commission_id, commission_amount, premium_amount, transaction_date, provider_ref",
-            "v_claims": "Claim details — columns: claim_id, claim_number, status, total_incurred, loss_date, reported_date, policy_ref",
-            "v_payments": "Payment details — columns: payment_id, policy_ref, amount, payment_date, payment_type",
-            "v_notes": "Notes — columns: note_id, policy_ref, claim_ref, author, note_date, note_text",
-        },
+        tables=_load_table_hints(),
     ),
     ReasoningTools(add_instructions=True),
     visualize_last_query_results,
@@ -48,7 +68,7 @@ sql_tools = [
 sql_agent = Agent(
     id="sql-agent",
     name="SQL Agent",
-    model=OpenAIResponses(id="gpt-4o-mini"),
+    model=OpenAIResponses(id=LLM_MODEL),
     db=get_demo_db(),
     system_message=SYSTEM_MESSAGE,
     

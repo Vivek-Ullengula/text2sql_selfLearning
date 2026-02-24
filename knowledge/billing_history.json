@@ -1,0 +1,50 @@
+{
+    "table_name": "billing_history",
+    "table_description": "Financial transactions on billing accounts.",
+    "table_columns": [
+        {
+            "name": "id",
+            "type": "VARCHAR",
+            "description": "PK."
+        },
+        {
+            "name": "billing_account_id",
+            "type": "VARCHAR",
+            "description": "FK to billing_accounts.system_id."
+        },
+        {
+            "name": "type_cd",
+            "type": "VARCHAR",
+            "description": "CreateAccount, Receipt, etc."
+        },
+        {
+            "name": "description",
+            "type": "VARCHAR",
+            "description": "Transaction description."
+        },
+        {
+            "name": "transaction_date",
+            "type": "DATE",
+            "description": "Date."
+        },
+        {
+            "name": "transaction_amount",
+            "type": "FLOAT",
+            "description": "Dollar amount."
+        },
+        {
+            "name": "due_amount",
+            "type": "FLOAT",
+            "description": "Amount due."
+        }
+    ],
+    "sample_queries": [
+        {
+            "question": "Total receipts?",
+            "sql": "SELECT SUM(transaction_amount) FROM billing_history WHERE type_cd = 'Receipt'"
+        }
+    ],
+    "rules": [
+        "Join billing_history.billing_account_id to billing_accounts.system_id."
+    ]
+}

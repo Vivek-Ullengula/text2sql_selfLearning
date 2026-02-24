@@ -1,0 +1,60 @@
+{
+    "table_name": "billing_accounts",
+    "table_description": "Payment accounts for customers.",
+    "table_columns": [
+        {
+            "name": "system_id",
+            "type": "VARCHAR",
+            "description": "PK."
+        },
+        {
+            "name": "account_number",
+            "type": "VARCHAR",
+            "description": "Account number."
+        },
+        {
+            "name": "account_status",
+            "type": "VARCHAR",
+            "description": "Status."
+        },
+        {
+            "name": "pay_plan",
+            "type": "VARCHAR",
+            "description": "Payment plan."
+        },
+        {
+            "name": "total_amt",
+            "type": "FLOAT",
+            "description": "Total amount."
+        },
+        {
+            "name": "open_amt",
+            "type": "FLOAT",
+            "description": "Outstanding balance."
+        },
+        {
+            "name": "paid_amt",
+            "type": "FLOAT",
+            "description": "Paid amount."
+        },
+        {
+            "name": "customer_ref",
+            "type": "VARCHAR",
+            "description": "FK to customers.system_id."
+        },
+        {
+            "name": "policy_ref",
+            "type": "VARCHAR",
+            "description": "FK to policies.system_id."
+        }
+    ],
+    "sample_queries": [
+        {
+            "question": "Accounts with outstanding balance",
+            "sql": "SELECT account_number, open_amt FROM billing_accounts WHERE open_amt > 0 ORDER BY open_amt DESC"
+        }
+    ],
+    "rules": [
+        "Links to both customers and policies."
+    ]
+}

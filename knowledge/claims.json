@@ -1,0 +1,74 @@
+{
+    "table_name": "claims",
+    "table_description": "Insurance claims/losses.",
+    "table_columns": [
+        {
+            "name": "system_id",
+            "type": "VARCHAR",
+            "description": "PK."
+        },
+        {
+            "name": "claim_number",
+            "type": "VARCHAR",
+            "description": "Tracking number."
+        },
+        {
+            "name": "status",
+            "type": "VARCHAR",
+            "description": "Open, Closed."
+        },
+        {
+            "name": "loss_date",
+            "type": "DATE",
+            "description": "Date of loss."
+        },
+        {
+            "name": "reported_date",
+            "type": "DATE",
+            "description": "Date reported."
+        },
+        {
+            "name": "description",
+            "type": "TEXT",
+            "description": "Short description."
+        },
+        {
+            "name": "loss_cause",
+            "type": "VARCHAR",
+            "description": "Cause category."
+        },
+        {
+            "name": "product_line",
+            "type": "VARCHAR",
+            "description": "PersonalAuto, etc."
+        },
+        {
+            "name": "at_fault",
+            "type": "VARCHAR",
+            "description": "At Fault or Not At Fault."
+        },
+        {
+            "name": "customer_ref",
+            "type": "VARCHAR",
+            "description": "FK to customers.system_id."
+        },
+        {
+            "name": "policy_ref",
+            "type": "VARCHAR",
+            "description": "FK to policies.system_id."
+        }
+    ],
+    "sample_queries": [
+        {
+            "question": "How many open claims?",
+            "sql": "SELECT COUNT(*) FROM claims WHERE status = 'Open'"
+        },
+        {
+            "question": "Claims by loss cause",
+            "sql": "SELECT loss_cause, COUNT(*) cnt FROM claims GROUP BY loss_cause ORDER BY cnt DESC"
+        }
+    ],
+    "rules": [
+        "Claims link to both customers AND policies. Use customer_ref or policy_ref as needed."
+    ]
+}

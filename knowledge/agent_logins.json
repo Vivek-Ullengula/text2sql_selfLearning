@@ -1,0 +1,66 @@
+{
+    "table_name": "agent_logins",
+    "table_description": "Individual agent user accounts for portal access. PK is login_id (not system_id).",
+    "table_columns": [
+        {
+            "name": "login_id",
+            "type": "VARCHAR",
+            "description": "PK. Unique login username (e.g. acmea1, acmegroup)."
+        },
+        {
+            "name": "system_id",
+            "type": "VARCHAR",
+            "description": "Shared system user ID (multiple logins may share one)."
+        },
+        {
+            "name": "first_name",
+            "type": "VARCHAR",
+            "description": "First name."
+        },
+        {
+            "name": "last_name",
+            "type": "VARCHAR",
+            "description": "Last name."
+        },
+        {
+            "name": "email",
+            "type": "VARCHAR",
+            "description": "Email."
+        },
+        {
+            "name": "status",
+            "type": "VARCHAR",
+            "description": "Active, etc."
+        },
+        {
+            "name": "provider_ref",
+            "type": "VARCHAR",
+            "description": "FK to providers.system_id (sub-provider level)."
+        }
+    ],
+    "sample_queries": [
+        {
+            "question": "List all active agent logins",
+            "sql": "SELECT login_id, first_name, last_name, email FROM agent_logins WHERE status = 'Active'"
+        },
+        {
+            "question": "Which customers belong to agent acmea1?",
+            "sql": "SELECT DISTINCT ppa.customer_ref, c.index_name FROM agent_logins al JOIN provider_policy_access ppa ON al.provider_ref = ppa.provider_ref LEFT JOIN customers c ON ppa.customer_ref = c.system_id WHERE al.login_id = 'acmea1'"
+        },
+        {
+            "question": "How many active policies does acmegroup have?",
+            "sql": "SELECT COUNT(*) AS active_policies FROM agent_logins al JOIN provider_policy_access ppa ON al.provider_ref = ppa.provider_ref JOIN policies p ON ppa.policy_system_id = p.system_id WHERE al.login_id = 'acmegroup' AND p.status = 'Active'"
+        },
+        {
+            "question": "Total premium for active policies under an agent",
+            "sql": "SELECT SUM(p.full_term_amt) AS total_premium FROM agent_logins al JOIN provider_policy_access ppa ON al.provider_ref = ppa.provider_ref JOIN policies p ON ppa.policy_system_id = p.system_id WHERE al.login_id = 'acmegroup' AND p.status = 'Active'"
+        }
+    ],
+    "rules": [
+        "PK is login_id, NOT system_id.",
+        "CRITICAL: To find policies, customers, vehicles, or ANY data for an agent, you MUST use provider_policy_access as the bridge.",
+        "Join chain: agent_logins.provider_ref = provider_policy_access.provider_ref, then provider_policy_access.policy_system_id = policies.system_id.",
+        "NEVER join agent_logins.provider_ref directly to policies.provider_ref — this WILL return 0 rows.",
+        "NEVER use providers.index_name to find agent policies — agents and providers have different system_ids."
+    ]
+}

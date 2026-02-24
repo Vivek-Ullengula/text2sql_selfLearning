@@ -3,17 +3,16 @@ from agno.knowledge.embedder.openai import OpenAIEmbedder
 from agno.knowledge.knowledge import Knowledge
 from agno.vectordb.pgvector import PgVector, SearchType
 
-# MySQL — CustLight insurance data (queries)
-mysql_url: str = "mysql+pymysql://root:password@localhost:3306/custlight"
+import os
+from agno.utils.log import logger
+from settings import MYSQL_URL, PG_URL, KNOWLEDGE_TABLE, LEARNINGS_TABLE
 
-# PostgreSQL — Agno knowledge base, sessions, memory
-pg_url: str = "postgresql+psycopg2://knowledge:password@localhost:5432/agno_db"
+# Re-export for backward compatibility
+mysql_url: str = MYSQL_URL
+pg_url: str = PG_URL
 
 def get_demo_db() -> PostgresDb:
     return PostgresDb(id="demo2-db", db_url=pg_url)
-
-import os
-from agno.utils.log import logger
 
 def create_knowledge_base(name: str, table_name: str, contents_db: PostgresDb = None) -> Knowledge:
     """Create a Knowledge instance backed by PgVector."""
@@ -37,12 +36,12 @@ def create_knowledge_base(name: str, table_name: str, contents_db: PostgresDb = 
 # The static, curated SQL Knowledge Base
 sql_agent_knowledge = create_knowledge_base(
     name="SQL Agent Knowledge",
-    table_name="custlight_sql_agent_knowledge_v2",
+    table_name=KNOWLEDGE_TABLE,
     contents_db=get_demo_db()
 )
 
 # The dynamic, learned knowledge base
 sql_agent_learnings = create_knowledge_base(
     name="SQL Agent Learnings",
-    table_name="custlight_sql_agent_learnings_v2"
+    table_name=LEARNINGS_TABLE
 )

@@ -1,0 +1,60 @@
+{
+    "table_name": "coverages",
+    "table_description": "Individual coverage lines on a vehicle.",
+    "table_columns": [
+        {
+            "name": "id",
+            "type": "VARCHAR",
+            "description": "PK."
+        },
+        {
+            "name": "vehicle_id",
+            "type": "VARCHAR",
+            "description": "FK to vehicles.id."
+        },
+        {
+            "name": "coverage_code",
+            "type": "VARCHAR",
+            "description": "Code: BODI, PROP, COLL, COPR, MEDP, etc."
+        },
+        {
+            "name": "description",
+            "type": "VARCHAR",
+            "description": "Full name."
+        },
+        {
+            "name": "status",
+            "type": "VARCHAR",
+            "description": "Active, etc."
+        },
+        {
+            "name": "limit1",
+            "type": "VARCHAR",
+            "description": "Primary limit."
+        },
+        {
+            "name": "limit2",
+            "type": "VARCHAR",
+            "description": "Secondary limit."
+        },
+        {
+            "name": "deductible",
+            "type": "VARCHAR",
+            "description": "Deductible amount."
+        },
+        {
+            "name": "premium_amt",
+            "type": "FLOAT",
+            "description": "Premium for this coverage."
+        }
+    ],
+    "sample_queries": [
+        {
+            "question": "Total bodily injury premiums?",
+            "sql": "SELECT SUM(premium_amt) FROM coverages WHERE coverage_code = 'BODI'"
+        }
+    ],
+    "rules": [
+        "Join coverages.vehicle_id to vehicles.id."
+    ]
+}

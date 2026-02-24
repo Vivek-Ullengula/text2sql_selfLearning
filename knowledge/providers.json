@@ -1,0 +1,62 @@
+{
+    "table_name": "providers",
+    "table_description": "Insurance Agencies and Brokers. Use commercial_name for human-readable names.",
+    "table_columns": [
+        {
+            "name": "system_id",
+            "type": "VARCHAR",
+            "description": "PK. Join with policies.provider_ref."
+        },
+        {
+            "name": "index_name",
+            "type": "VARCHAR",
+            "description": "Internal search key (often a username). Do NOT display this to users."
+        },
+        {
+            "name": "commercial_name",
+            "type": "VARCHAR",
+            "description": "The human-readable business name, e.g. 'Smart Insurance Company', 'FREEWAY INSURANCE TX'."
+        },
+        {
+            "name": "provider_type",
+            "type": "VARCHAR",
+            "description": "'Producer', etc."
+        },
+        {
+            "name": "provider_number",
+            "type": "VARCHAR",
+            "description": "Agency number."
+        },
+        {
+            "name": "email",
+            "type": "VARCHAR",
+            "description": "Business email."
+        },
+        {
+            "name": "phone",
+            "type": "VARCHAR",
+            "description": "Business phone."
+        },
+        {
+            "name": "status",
+            "type": "VARCHAR",
+            "description": "Active, Deleted, etc."
+        }
+    ],
+    "sample_queries": [
+        {
+            "question": "How many providers are there?",
+            "sql": "SELECT COUNT(*) FROM providers"
+        },
+        {
+            "question": "List the top 5 providers by policy count",
+            "sql": "SELECT pr.commercial_name, COUNT(p.system_id) AS policy_count FROM providers pr JOIN policies p ON pr.system_id = p.provider_ref GROUP BY pr.commercial_name ORDER BY policy_count DESC LIMIT 5"
+        }
+    ],
+    "rules": [
+        "ALWAYS use commercial_name for display, never index_name.",
+        "Join with policies using providers.system_id = policies.provider_ref.",
+        "Providers are Agencies. Do not confuse them with Customers.",
+        "Use LIKE for text matching on commercial_name."
+    ]
+}

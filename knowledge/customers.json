@@ -1,0 +1,66 @@
+{
+    "table_name": "customers",
+    "table_description": "Insured policyholders \u2014 individuals or companies. Use index_name for the readable name.",
+    "table_columns": [
+        {
+            "name": "system_id",
+            "type": "VARCHAR",
+            "description": "PK. Join with policies.customer_ref."
+        },
+        {
+            "name": "customer_number",
+            "type": "VARCHAR",
+            "description": "Customer reference number."
+        },
+        {
+            "name": "index_name",
+            "type": "VARCHAR",
+            "description": "Human-readable name, e.g. 'Patrick Myers', 'Summit Shield Risk Solutions'."
+        },
+        {
+            "name": "status",
+            "type": "VARCHAR",
+            "description": "Active, etc."
+        },
+        {
+            "name": "entity_type",
+            "type": "VARCHAR",
+            "description": "Individual or Company."
+        },
+        {
+            "name": "email",
+            "type": "VARCHAR",
+            "description": "Contact email."
+        },
+        {
+            "name": "phone",
+            "type": "VARCHAR",
+            "description": "Phone number."
+        },
+        {
+            "name": "birth_date",
+            "type": "DATE",
+            "description": "Date of birth."
+        },
+        {
+            "name": "add_date",
+            "type": "DATE",
+            "description": "Date customer was created."
+        }
+    ],
+    "sample_queries": [
+        {
+            "question": "How many policies does Patrick Myers have?",
+            "sql": "SELECT COUNT(p.system_id) FROM customers c JOIN policies p ON c.system_id = p.customer_ref WHERE c.index_name LIKE '%Patrick Myers%'"
+        },
+        {
+            "question": "Find all customers who are companies",
+            "sql": "SELECT index_name, email FROM customers WHERE entity_type = 'Company'"
+        }
+    ],
+    "rules": [
+        "Join customers.system_id to policies.customer_ref.",
+        "Customers are Insured persons/businesses. Not agencies.",
+        "Use LIKE for text matching."
+    ]
+}

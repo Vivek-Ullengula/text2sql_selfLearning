@@ -1,0 +1,84 @@
+{
+    "table_name": "policies",
+    "table_description": "Insurance policies connecting customers to providers.",
+    "table_columns": [
+        {
+            "name": "system_id",
+            "type": "VARCHAR",
+            "description": "PK."
+        },
+        {
+            "name": "policy_number",
+            "type": "VARCHAR",
+            "description": "Policy number like 'PA0015567'."
+        },
+        {
+            "name": "status",
+            "type": "VARCHAR",
+            "description": "Active, Cancelled, etc."
+        },
+        {
+            "name": "effective_date",
+            "type": "DATE",
+            "description": "Start date."
+        },
+        {
+            "name": "expiration_date",
+            "type": "DATE",
+            "description": "End date."
+        },
+        {
+            "name": "carrier_group",
+            "type": "VARCHAR",
+            "description": "Carrier code."
+        },
+        {
+            "name": "full_term_amt",
+            "type": "FLOAT",
+            "description": "Total premium."
+        },
+        {
+            "name": "description",
+            "type": "VARCHAR",
+            "description": "Product name."
+        },
+        {
+            "name": "insured_name",
+            "type": "VARCHAR",
+            "description": "Name of the insured on this policy."
+        },
+        {
+            "name": "provider_ref",
+            "type": "VARCHAR",
+            "description": "FK to providers.system_id."
+        },
+        {
+            "name": "customer_ref",
+            "type": "VARCHAR",
+            "description": "FK to customers.system_id."
+        }
+    ],
+    "sample_queries": [
+        {
+            "question": "Total premium for active policies?",
+            "sql": "SELECT SUM(full_term_amt) FROM policies WHERE status = 'Active'"
+        },
+        {
+            "question": "List policies for a customer",
+            "sql": "SELECT p.policy_number, p.status, p.effective_date FROM policies p JOIN customers c ON p.customer_ref = c.system_id WHERE c.index_name LIKE '%Patrick%'"
+        },
+        {
+            "question": "Active policies under an agent (e.g. acmegroup)",
+            "sql": "SELECT p.policy_number, p.status, p.insured_name, p.full_term_amt FROM agent_logins al JOIN provider_policy_access ppa ON al.provider_ref = ppa.provider_ref JOIN policies p ON ppa.policy_system_id = p.system_id WHERE al.login_id = 'acmegroup' AND p.status = 'Active' LIMIT 50"
+        },
+        {
+            "question": "How many policies have vehicles?",
+            "sql": "SELECT COUNT(DISTINCT v.policy_id) FROM agent_logins al JOIN provider_policy_access ppa ON al.provider_ref = ppa.provider_ref JOIN vehicles v ON v.policy_id = ppa.policy_system_id WHERE al.login_id = 'acmegroup'"
+        }
+    ],
+    "rules": [
+        "Policies connect customers and providers. Join via customer_ref and provider_ref.",
+        "CRITICAL: When querying policies for an AGENT (login), you MUST go through provider_policy_access: agent_logins → ppa → policies. NEVER join policies.provider_ref directly to agent_logins.provider_ref — this returns 0 rows.",
+        "When querying policies for a PROVIDER (agency), you CAN join policies.provider_ref = providers.system_id directly — but ONLY for leaf providers (101-104), NOT for group/agency providers (11111, 22222, 33333)."
+    ]
+}

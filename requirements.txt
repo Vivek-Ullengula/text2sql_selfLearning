@@ -11,4 +11,3 @@ sqlalchemy
 fastapi
 uvicorn
 python-dotenv
-streamlit

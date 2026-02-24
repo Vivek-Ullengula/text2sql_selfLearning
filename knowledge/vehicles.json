@@ -1,0 +1,64 @@
+{
+    "table_name": "vehicles",
+    "table_description": "Insured vehicles on a policy.",
+    "table_columns": [
+        {
+            "name": "id",
+            "type": "VARCHAR",
+            "description": "PK."
+        },
+        {
+            "name": "policy_id",
+            "type": "VARCHAR",
+            "description": "FK to policies.system_id."
+        },
+        {
+            "name": "vehicle_number",
+            "type": "INT",
+            "description": "Sequence."
+        },
+        {
+            "name": "vin",
+            "type": "VARCHAR",
+            "description": "VIN."
+        },
+        {
+            "name": "year",
+            "type": "INT",
+            "description": "Model year."
+        },
+        {
+            "name": "make",
+            "type": "VARCHAR",
+            "description": "Manufacturer."
+        },
+        {
+            "name": "model",
+            "type": "VARCHAR",
+            "description": "Model."
+        },
+        {
+            "name": "body_type",
+            "type": "VARCHAR",
+            "description": "Body type."
+        },
+        {
+            "name": "status",
+            "type": "VARCHAR",
+            "description": "Active, etc."
+        }
+    ],
+    "sample_queries": [
+        {
+            "question": "How many vehicles?",
+            "sql": "SELECT COUNT(*) FROM vehicles"
+        },
+        {
+            "question": "List all NISSAN vehicles",
+            "sql": "SELECT v.year, v.model, v.vin, p.policy_number FROM vehicles v JOIN policies p ON v.policy_id = p.system_id WHERE v.make = 'NISSAN'"
+        }
+    ],
+    "rules": [
+        "Join vehicles.policy_id to policies.system_id."
+    ]
+}

@@ -1,0 +1,68 @@
+{
+    "table_name": "provider_policy_access",
+    "table_description": "CRITICAL junction table. This is the ONLY way to connect agent_logins to policies, customers, vehicles, coverages, claims, and billing. Every agent-related query MUST go through this table.",
+    "table_columns": [
+        {
+            "name": "provider_ref",
+            "type": "VARCHAR",
+            "description": "Agent/agency/group provider ID. Matches agent_logins.provider_ref."
+        },
+        {
+            "name": "policy_system_id",
+            "type": "VARCHAR",
+            "description": "Policy ID. JOIN to policies.system_id."
+        },
+        {
+            "name": "policy_number",
+            "type": "VARCHAR",
+            "description": "Policy number for convenience."
+        },
+        {
+            "name": "customer_ref",
+            "type": "VARCHAR",
+            "description": "Customer on the policy. JOIN to customers.system_id."
+        }
+    ],
+    "sample_queries": [
+        {
+            "question": "How many active policies does acmegroup have?",
+            "sql": "SELECT COUNT(*) AS active_policy_count FROM agent_logins al JOIN provider_policy_access ppa ON al.provider_ref = ppa.provider_ref JOIN policies p ON ppa.policy_system_id = p.system_id WHERE al.login_id = 'acmegroup' AND p.status = 'Active'"
+        },
+        {
+            "question": "Which customers belong to agent acmea1?",
+            "sql": "SELECT DISTINCT ppa.customer_ref, c.index_name FROM agent_logins al JOIN provider_policy_access ppa ON al.provider_ref = ppa.provider_ref LEFT JOIN customers c ON ppa.customer_ref = c.system_id WHERE al.login_id = 'acmea1'"
+        },
+        {
+            "question": "What is the total premium for all active policies under Acme Group?",
+            "sql": "SELECT SUM(p.full_term_amt) AS total_premium FROM agent_logins al JOIN provider_policy_access ppa ON al.provider_ref = ppa.provider_ref JOIN policies p ON ppa.policy_system_id = p.system_id WHERE al.login_id = 'acmegroup' AND p.status = 'Active'"
+        },
+        {
+            "question": "How many vehicles are insured under acmea1?",
+            "sql": "SELECT COUNT(DISTINCT v.id) AS vehicle_count FROM agent_logins al JOIN provider_policy_access ppa ON al.provider_ref = ppa.provider_ref JOIN vehicles v ON v.policy_id = ppa.policy_system_id WHERE al.login_id = 'acmea1'"
+        },
+        {
+            "question": "Which customer under acmea1 has the most vehicles?",
+            "sql": "SELECT c.index_name, COUNT(DISTINCT v.id) AS vehicle_count FROM agent_logins al JOIN provider_policy_access ppa ON al.provider_ref = ppa.provider_ref JOIN vehicles v ON v.policy_id = ppa.policy_system_id JOIN customers c ON ppa.customer_ref = c.system_id WHERE al.login_id = 'acmea1' GROUP BY c.index_name ORDER BY vehicle_count DESC LIMIT 5"
+        },
+        {
+            "question": "Show all claims for policies under acmeagpa",
+            "sql": "SELECT cl.claim_number, cl.status, cl.loss_date, cl.description FROM agent_logins al JOIN provider_policy_access ppa ON al.provider_ref = ppa.provider_ref JOIN claims cl ON cl.policy_ref = ppa.policy_system_id WHERE al.login_id = 'acmeagpa'"
+        },
+        {
+            "question": "List each agent with their active policy count",
+            "sql": "SELECT al.first_name, al.last_name, al.login_id, COUNT(DISTINCT ppa.policy_system_id) AS active_policies FROM agent_logins al JOIN provider_policy_access ppa ON al.provider_ref = ppa.provider_ref JOIN policies p ON ppa.policy_system_id = p.system_id WHERE p.status = 'Active' GROUP BY al.login_id, al.first_name, al.last_name ORDER BY active_policies DESC"
+        },
+        {
+            "question": "Show coverage details for policies under Acme Group",
+            "sql": "SELECT cov.coverage_code, cov.description, SUM(cov.premium_amt) AS total_premium FROM agent_logins al JOIN provider_policy_access ppa ON al.provider_ref = ppa.provider_ref JOIN vehicles v ON v.policy_id = ppa.policy_system_id JOIN coverages cov ON cov.vehicle_id = v.id WHERE al.login_id = 'acmegroup' GROUP BY cov.coverage_code, cov.description ORDER BY total_premium DESC"
+        }
+    ],
+    "rules": [
+        "CRITICAL: This table is the ONLY correct way to link agent_logins to ANY other data (policies, customers, vehicles, coverages, claims, billing).",
+        "The join chain is ALWAYS: agent_logins.provider_ref = ppa.provider_ref, THEN ppa.policy_system_id = policies.system_id (for policies), OR ppa.customer_ref = customers.system_id (for customers), OR vehicles.policy_id = ppa.policy_system_id (for vehicles).",
+        "WRONG: policies.provider_ref = agent_logins.provider_ref (WILL RETURN 0 ROWS)",
+        "WRONG: providers.index_name = 'acmegroup' then policies.provider_ref = providers.system_id (WILL RETURN 0 ROWS)",
+        "RIGHT: agent_logins → provider_policy_access → policies/customers/vehicles/coverages/claims",
+        "Agent hierarchy: acmegroup (11111) is the group, acmeagtx (22222) and acmeagpa (33333) are agencies, acmea1-4 (101-104) are individual agents. ALL use the same junction table pattern."
+    ]
+}

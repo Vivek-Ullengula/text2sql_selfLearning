@@ -1,163 +1,194 @@
-import json
+semantic_model = """
+## Database: json_insurancedb (MySQL)
+An insurance management system containing providers (agencies), customers, policies, vehicles, coverages, claims, and billing data.
 
-semantic_model = {
-    "tables": [
-        {
-            "table_name": "v_customers",
-            "table_description": "Customer details view. Each row is one customer with all attributes as columns.",
-            "columns": [
-                {"name": "customer_id", "type": "INT", "description": "Unique customer ID (e.g. 1, 2, 3)"},
-                {"name": "customer_name", "type": "VARCHAR", "description": "Full customer name (e.g. 'SALTPRINCETON', 'WELLSFARGO', 'CHRISGAYLE')"},
-                {"name": "status", "type": "VARCHAR", "description": "Customer status (e.g. 'ACTIVE')"},
-                {"name": "customer_number", "type": "VARCHAR", "description": "Customer number identifier"},
-                {"name": "email", "type": "VARCHAR", "description": "Email address (e.g. 'ACME@GMAIL.COM')"},
-                {"name": "phone", "type": "VARCHAR", "description": "Primary phone number"},
-                {"name": "city", "type": "VARCHAR", "description": "Billing city (e.g. 'CASSSTMONTEREY', 'SANDIMAS')"},
-                {"name": "state", "type": "VARCHAR", "description": "Billing state (e.g. 'CA')"},
-                {"name": "zip_code", "type": "VARCHAR", "description": "Billing ZIP code"},
-                {"name": "address", "type": "VARCHAR", "description": "Lookup address"},
-                {"name": "tax_id", "type": "VARCHAR", "description": "Tax ID"},
-                {"name": "provider_ref", "type": "VARCHAR", "description": "Provider ID (FK to v_providers.provider_id)"},
-                {"name": "add_date", "type": "VARCHAR", "description": "Date customer was added"},
-                {"name": "add_user", "type": "VARCHAR", "description": "User who added the customer"},
-            ],
-        },
-        {
-            "table_name": "v_policies",
-            "table_description": "Policy details view. Each row is one insurance policy with all attributes as columns.",
-            "columns": [
-                {"name": "policy_id", "type": "INT", "description": "Unique policy ID"},
-                {"name": "policy_number", "type": "VARCHAR", "description": "Policy number (e.g. 'MLP00000001')"},
-                {"name": "policy_display_number", "type": "VARCHAR", "description": "Display policy number"},
-                {"name": "status", "type": "VARCHAR", "description": "Policy status ('ACTIVE' or 'CANCELLED')"},
-                {"name": "status_code", "type": "VARCHAR", "description": "Status code"},
-                {"name": "customer_ref", "type": "VARCHAR", "description": "Customer ID (FK to v_customers.customer_id). Stored as string — use CAST(customer_ref AS UNSIGNED) for joins."},
-                {"name": "provider_ref", "type": "VARCHAR", "description": "Provider ID (FK to v_providers.provider_id). Stored as string."},
-                {"name": "expiration_date", "type": "VARCHAR", "description": "Expiration date in YYYYMMDD format (e.g. '20270203')"},
-                {"name": "index_name", "type": "VARCHAR", "description": "Policy index name"},
-                {"name": "quote_number", "type": "VARCHAR", "description": "Quote number"},
-                {"name": "transaction_code", "type": "VARCHAR", "description": "Transaction code"},
-                {"name": "city", "type": "VARCHAR", "description": "City"},
-                {"name": "state", "type": "VARCHAR", "description": "State code"},
-                {"name": "postal_code", "type": "VARCHAR", "description": "Postal code"},
-                {"name": "email", "type": "VARCHAR", "description": "Contact email"},
-                {"name": "contact_number", "type": "VARCHAR", "description": "Contact phone number"},
-                {"name": "tax_id", "type": "VARCHAR", "description": "Tax ID"},
-            ],
-        },
-        {
-            "table_name": "v_providers",
-            "table_description": "Provider/producer details view. Each row is one insurance provider, agent, or financial institution.",
-            "columns": [
-                {"name": "provider_id", "type": "INT", "description": "Unique provider ID"},
-                {"name": "provider_name", "type": "VARCHAR", "description": "Provider name (e.g. 'AGENTBILLPRODUCERI')"},
-                {"name": "provider_type", "type": "VARCHAR", "description": "Type: 'PRODUCER' or 'FINANCIAL INSTITUTION'"},
-                {"name": "provider_number", "type": "VARCHAR", "description": "Provider number"},
-                {"name": "business_name", "type": "VARCHAR", "description": "Business name"},
-                {"name": "personal_name", "type": "VARCHAR", "description": "Personal name (if individual)"},
-                {"name": "status_code", "type": "VARCHAR", "description": "Status code"},
-                {"name": "city", "type": "VARCHAR", "description": "City"},
-                {"name": "state", "type": "VARCHAR", "description": "State code (e.g. 'CA')"},
-                {"name": "postal_code", "type": "VARCHAR", "description": "Postal code"},
-                {"name": "street_address", "type": "VARCHAR", "description": "Street address"},
-                {"name": "phone", "type": "VARCHAR", "description": "Phone number"},
-                {"name": "tax_id", "type": "VARCHAR", "description": "Tax ID"},
-                {"name": "producer_agency", "type": "VARCHAR", "description": "Producer agency"},
-                {"name": "producer_group", "type": "VARCHAR", "description": "Producer group"},
-            ],
-        },
-        {
-            "table_name": "v_commissions",
-            "table_description": "Commission payment records view.",
-            "columns": [
-                {"name": "commission_id", "type": "INT", "description": "Unique commission ID"},
-                {"name": "commission_amount", "type": "DECIMAL", "description": "Commission dollar amount"},
-                {"name": "premium_amount", "type": "DECIMAL", "description": "Premium amount"},
-                {"name": "transaction_date", "type": "DATE", "description": "Transaction date"},
-                {"name": "provider_ref", "type": "INT", "description": "FK to v_providers.provider_id"},
-                {"name": "policy_ref", "type": "INT", "description": "FK to v_policies.policy_id (SourceRef)"},
-                {"name": "policy_number", "type": "VARCHAR", "description": "Policy number"},
-                {"name": "commission_type", "type": "VARCHAR", "description": "Commission type"},
-                {"name": "carrier_code", "type": "VARCHAR", "description": "Carrier code"},
-                {"name": "charged_amount", "type": "DECIMAL", "description": "Charged amount"},
-            ],
-        },
-        {
-            "table_name": "v_claims",
-            "table_description": "Claims details view.",
-            "columns": [
-                {"name": "claim_id", "type": "INT", "description": "Unique claim ID"},
-                {"name": "claim_number", "type": "VARCHAR", "description": "Claim number"},
-                {"name": "status", "type": "VARCHAR", "description": "Claim status"},
-                {"name": "total_incurred", "type": "DECIMAL", "description": "Total incurred amount"},
-                {"name": "loss_date", "type": "VARCHAR", "description": "Date of loss"},
-                {"name": "reported_date", "type": "VARCHAR", "description": "Date reported"},
-                {"name": "description", "type": "VARCHAR", "description": "Claim description"},
-                {"name": "adjuster", "type": "VARCHAR", "description": "Adjuster name"},
-                {"name": "policy_ref", "type": "VARCHAR", "description": "FK to v_policies.policy_id (CAST required)"},
-            ],
-        },
-        {
-            "table_name": "v_payments",
-            "table_description": "Payment details view.",
-            "columns": [
-                {"name": "payment_id", "type": "INT", "description": "Unique payment ID"},
-                {"name": "policy_ref", "type": "VARCHAR", "description": "FK to v_policies.policy_id (CAST required)"},
-                {"name": "amount", "type": "DECIMAL", "description": "Payment amount"},
-                {"name": "payment_date", "type": "VARCHAR", "description": "Payment date"},
-                {"name": "payment_type", "type": "VARCHAR", "description": "Payment type"},
-            ],
-        },
-        {
-            "table_name": "v_notes",
-            "table_description": "Notes view.",
-            "columns": [
-                {"name": "note_id", "type": "INT", "description": "Unique note ID"},
-                {"name": "policy_ref", "type": "VARCHAR", "description": "FK to v_policies.policy_id (CAST required)"},
-                {"name": "claim_ref", "type": "VARCHAR", "description": "FK to v_claims.claim_id (CAST required)"},
-                {"name": "author", "type": "VARCHAR", "description": "Author"},
-                {"name": "note_date", "type": "VARCHAR", "description": "Note date"},
-                {"name": "note_text", "type": "VARCHAR", "description": "Note content"},
-            ],
-        },
-    ],
-    "relationships": [
-        {
-            "description": "Customer to Policy",
-            "join": "v_policies.customer_ref = v_customers.customer_id (use CAST(v_policies.customer_ref AS UNSIGNED) = v_customers.customer_id)",
-            "example": "SELECT c.customer_name, p.policy_number, p.status FROM v_policies p JOIN v_customers c ON c.customer_id = CAST(p.customer_ref AS UNSIGNED)",
-        },
-        {
-            "description": "Customer to Provider",
-            "join": "v_customers.provider_ref = v_providers.provider_id (use CAST(v_customers.provider_ref AS UNSIGNED) = v_providers.provider_id)",
-            "example": "SELECT c.customer_name, pr.provider_name FROM v_customers c JOIN v_providers pr ON pr.provider_id = CAST(c.provider_ref AS UNSIGNED)",
-        },
-        {
-            "description": "Policy to Provider",
-            "join": "v_policies.provider_ref = v_providers.provider_id",
-            "example": "SELECT p.policy_number, pr.provider_name FROM v_policies p JOIN v_providers pr ON pr.provider_id = CAST(p.provider_ref AS UNSIGNED)",
-        },
-        {
-            "description": "Commission to Provider",
-            "join": "v_commissions.provider_ref = v_providers.provider_id",
-        },
-        {
-            "description": "Claim to Policy",
-            "join": "v_claims.policy_ref = v_policies.policy_id (use CAST(v_claims.policy_ref AS UNSIGNED) = v_policies.policy_id)",
-        },
-        {
-            "description": "Payment to Policy",
-            "join": "v_payments.policy_ref = v_policies.policy_id (use CAST(v_payments.policy_ref AS UNSIGNED) = v_policies.policy_id)",
-        },
-        {
-            "description": "Note to Policy",
-            "join": "v_notes.policy_ref = v_policies.policy_id (use CAST(v_notes.policy_ref AS UNSIGNED) = v_policies.policy_id)",
-        },
-        {
-            "description": "Note to Claim",
-            "join": "v_notes.claim_ref = v_claims.claim_id (use CAST(v_notes.claim_ref AS UNSIGNED) = v_claims.claim_id)",
-        },
-    ],
-}
+---
 
-SEMANTIC_MODEL_STR = json.dumps(semantic_model, indent=2)
+### Table: providers
+Insurance agencies and brokers.
+| Column | Type | Description |
+|--------|------|-------------|
+| system_id (PK) | VARCHAR | Unique provider ID |
+| index_name | VARCHAR | Short search name (often a username, not the commercial name) |
+| commercial_name | VARCHAR | **The human-readable business name** (e.g. "Smart Insurance Company") |
+| provider_type | VARCHAR | E.g. "Producer" |
+| provider_number | VARCHAR | Official agency number like "80031-000-000" |
+| email | VARCHAR | Business email |
+| phone | VARCHAR | Business phone |
+| status | VARCHAR | Active, Deleted, etc. |
+
+### Table: agent_logins
+Individual user accounts for agent portal access.
+| Column | Type | Description |
+|--------|------|-------------|
+| login_id (PK) | VARCHAR | Unique login username (e.g. acmea1, acmegroup) |
+| system_id | VARCHAR | Shared system user ID (multiple logins may share one) |
+| first_name | VARCHAR | Agent first name (e.g. "Acme Agent1", "Acme Group") |
+| last_name | VARCHAR | Agent surname |
+| email | VARCHAR | Contact email |
+| status | VARCHAR | Active or not |
+| provider_ref (FK→providers.system_id) | VARCHAR | Links to the agency they work for |
+
+### Table: customers
+The insured policyholders (individuals or companies).
+| Column | Type | Description |
+|--------|------|-------------|
+| system_id (PK) | VARCHAR | Unique customer ID |
+| customer_number | VARCHAR | Customer reference number |
+| index_name | VARCHAR | Human-readable name (e.g. "Patrick Myers", "Summit Shield Risk Solutions") |
+| status | VARCHAR | Active, etc. |
+| entity_type | VARCHAR | Individual or Company |
+| email | VARCHAR | Contact email |
+| phone | VARCHAR | Phone number |
+| birth_date | DATE | Date of birth (individuals only) |
+| add_date | DATE | Date customer was created |
+
+### Table: policies
+Insurance policies linking customers to providers.
+| Column | Type | Description |
+|--------|------|-------------|
+| system_id (PK) | VARCHAR | Unique policy ID |
+| policy_number | VARCHAR | Policy number like "PA0015567" |
+| status | VARCHAR | Active, Cancelled, etc. |
+| effective_date | DATE | Policy start |
+| expiration_date | DATE | Policy end |
+| carrier_group | VARCHAR | Carrier code like "ACME" |
+| full_term_amt | FLOAT | Total premium for the term |
+| description | VARCHAR | Product name, e.g. "Texas Ranger" |
+| insured_name | VARCHAR | Name of the insured on this policy |
+| provider_ref (FK→providers.system_id) | VARCHAR | The agency servicing this policy |
+| customer_ref (FK→customers.system_id) | VARCHAR | The customer who owns this policy |
+
+### Table: vehicles
+Insured vehicles on a policy.
+| Column | Type | Description |
+|--------|------|-------------|
+| id (PK) | VARCHAR | Vehicle ID |
+| policy_id (FK→policies.system_id) | VARCHAR | Which policy this vehicle is on |
+| vehicle_number | INT | Vehicle sequence number |
+| vin | VARCHAR | VIN |
+| year | INT | Model year |
+| make | VARCHAR | Manufacturer (e.g. NISSAN) |
+| model | VARCHAR | Model name |
+| body_type | VARCHAR | Body style |
+| status | VARCHAR | Active, etc. |
+
+### Table: coverages
+Individual coverage lines on a vehicle.
+| Column | Type | Description |
+|--------|------|-------------|
+| id (PK) | VARCHAR | Coverage ID |
+| vehicle_id (FK→vehicles.id) | VARCHAR | Which vehicle this covers |
+| coverage_code | VARCHAR | Code like BODI, PROP, COLL, COMP |
+| description | VARCHAR | Full name, e.g. "Bodily Injury" |
+| status | VARCHAR | Active, etc. |
+| limit1 | VARCHAR | Primary limit |
+| limit2 | VARCHAR | Secondary limit |
+| deductible | VARCHAR | Deductible amount |
+| premium_amt | FLOAT | Premium for this coverage |
+
+### Table: claims
+Insurance claims filed against a policy.
+| Column | Type | Description |
+|--------|------|-------------|
+| system_id (PK) | VARCHAR | Claim ID |
+| claim_number | VARCHAR | Tracking number like "24PAZ-00000001" |
+| status | VARCHAR | Open, Closed |
+| loss_date | DATE | Date the loss occurred |
+| reported_date | DATE | Date it was reported |
+| description | TEXT | Short description of the loss |
+| loss_cause | VARCHAR | Categorized cause |
+| product_line | VARCHAR | PersonalAuto, etc. |
+| at_fault | VARCHAR | At Fault, Not At Fault |
+| customer_ref (FK→customers.system_id) | VARCHAR | The customer who filed |
+| policy_ref (FK→policies.system_id) | VARCHAR | The policy it's against |
+
+### Table: billing_accounts
+Payment accounts for customers.
+| Column | Type | Description |
+|--------|------|-------------|
+| system_id (PK) | VARCHAR | Account ID |
+| account_number | VARCHAR | Account number (often same as policy number) |
+| account_status | VARCHAR | Status description |
+| pay_plan | VARCHAR | Payment plan type |
+| total_amt | FLOAT | Total amount |
+| open_amt | FLOAT | Outstanding balance |
+| paid_amt | FLOAT | Amount paid |
+| customer_ref (FK→customers.system_id) | VARCHAR | Customer who pays |
+| policy_ref (FK→policies.system_id) | VARCHAR | Associated policy |
+
+### Table: billing_history
+Individual financial transactions on accounts.
+| Column | Type | Description |
+|--------|------|-------------|
+| id (PK) | VARCHAR | Transaction ID |
+| billing_account_id (FK→billing_accounts.system_id) | VARCHAR | Parent account |
+| type_cd | VARCHAR | Transaction type (CreateAccount, Receipt, etc.) |
+| description | VARCHAR | Description |
+| transaction_date | DATE | Transaction date |
+| transaction_amount | FLOAT | Dollar amount |
+| due_amount | FLOAT | Amount due |
+
+### Table: provider_policy_access
+Junction table mapping sub-providers (agent-level) to the policies they can access. Providers have a hierarchy: parent providers (e.g. system_id=1) own policies, sub-providers (e.g. 101-104) are agent-level access scopes.
+| Column | Type | Description |
+|--------|------|-------------|
+| provider_ref | VARCHAR | Sub-provider ID (matches agent_logins.provider_ref) |
+| policy_system_id | VARCHAR | Policy ID the sub-provider can access |
+| policy_number | VARCHAR | Policy number for convenience |
+| customer_ref | VARCHAR | Customer on the policy for convenience |
+
+---
+
+## Key Relationships
+- **providers** → **policies** via `policies.provider_ref = providers.system_id`
+- **customers** → **policies** via `policies.customer_ref = customers.system_id`
+- **policies** → **vehicles** via `vehicles.policy_id = policies.system_id`
+- **vehicles** → **coverages** via `coverages.vehicle_id = vehicles.id`
+- **customers** → **claims** via `claims.customer_ref = customers.system_id`
+- **policies** → **claims** via `claims.policy_ref = policies.system_id`
+- **customers** → **billing_accounts** via `billing_accounts.customer_ref = customers.system_id`
+- **policies** → **billing_accounts** via `billing_accounts.policy_ref = policies.system_id`
+- **billing_accounts** → **billing_history** via `billing_history.billing_account_id = billing_accounts.system_id`
+- **providers** → **agent_logins** via `agent_logins.provider_ref = providers.system_id`
+- **agent_logins** → **policies** via `provider_policy_access` (agent_logins.provider_ref = provider_policy_access.provider_ref)
+
+## Important Notes
+- Use `providers.commercial_name` for human-readable provider names.
+- Use `customers.index_name` for human-readable customer names.
+- Use `policies.insured_name` when you need the insured name on a specific policy.
+
+## Agent→Policy/Customer Linkage (CRITICAL)
+ALL queries involving an agent login MUST go through the `provider_policy_access` junction table.
+NEVER join `agent_logins` directly to `policies` or `customers` — the provider_ref values differ.
+
+**Agent → Customers:**
+```sql
+SELECT DISTINCT ppa.customer_ref, c.index_name
+FROM agent_logins al
+JOIN provider_policy_access ppa ON al.provider_ref = ppa.provider_ref
+LEFT JOIN customers c ON ppa.customer_ref = c.system_id
+WHERE al.login_id = 'acmea1'
+```
+
+**Agent → Policies (e.g. count active policies):**
+```sql
+SELECT COUNT(*) AS active_policy_count
+FROM agent_logins al
+JOIN provider_policy_access ppa ON al.provider_ref = ppa.provider_ref
+JOIN policies p ON ppa.policy_system_id = p.system_id
+WHERE al.login_id = 'acmegroup' AND p.status = 'Active'
+```
+
+**Agent → Claims:**
+```sql
+SELECT cl.*
+FROM agent_logins al
+JOIN provider_policy_access ppa ON al.provider_ref = ppa.provider_ref
+JOIN claims cl ON cl.policy_ref = ppa.policy_system_id
+WHERE al.login_id = 'acmea1'
+```
+
+WRONG (will return 0): `policies.provider_ref = agent_logins.provider_ref`
+RIGHT: `agent_logins → provider_policy_access → policies` (via junction table)
+"""
